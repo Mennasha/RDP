@@ -8,27 +8,24 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Configure TLS and Download Ngrok
+    - name: Install Ngrok via Chocolatey
       run: |
-        # ضمان توافق بروتوكولات الأمان لتحميل الملفات
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        
-        # تحميل أحدث نسخة مستقرة ومباشرة من موقع ngrok الرسمي
-        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bDR9AsRytis/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
-        
-        # فك الضغط
-        Expand-Archive ngrok.zip -DestinationPath .\ngrok
+        # تثبيت الـ ngrok رسميًا وبأحدث نسخة بدون روابط مباشرة
+        choco install ngrok -y
     - name: Authenticate Ngrok
       run: |
-        .\ngrok\ngrok.exe config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+        # ربط التوكين الخاص بك لفتح النفق
+        ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
     - name: Enable RDP and Set Password
       run: |
+        # تفعيل خاصية سطح المكتب البعيد وإعداد الحساب
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         net user administrator "RdpPassword2026!" /add
         net localgroup administrators administrator /add
     - name: Create Tunnel and Keep Alive
       run: |
-        Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp --region us 3389"
-        echo "RDP is ready!"
+        # تشغيل النفق والإبقاء على السيرفر حيًا
+        Start-Process ngrok -ArgumentList "tcp 3389"
+        echo "RDP is ready! Check your Ngrok Endpoints."
         Start-Sleep -Seconds 21600
