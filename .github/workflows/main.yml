@@ -8,10 +8,16 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Download and Extract Ngrok
+    - name: Configure TLS and Download Ngrok
       run: |
-        Invoke-WebRequest https://bin.equinox.io/c/b342391/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-        Expand-Archive ngrok.zip
+        # ضمان توافق بروتوكولات الأمان لتحميل الملفات
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        
+        # تحميل أحدث نسخة مستقرة ومباشرة من موقع ngrok الرسمي
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bDR9AsRytis/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+        
+        # فك الضغط
+        Expand-Archive ngrok.zip -DestinationPath .\ngrok
     - name: Authenticate Ngrok
       run: |
         .\ngrok\ngrok.exe config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
@@ -23,6 +29,6 @@ jobs:
         net localgroup administrators administrator /add
     - name: Create Tunnel and Keep Alive
       run: |
-        Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp 3389"
+        Start-Process .\ngrok\ngrok.exe -ArgumentList "tcp --region us 3389"
         echo "RDP is ready!"
         Start-Sleep -Seconds 21600
