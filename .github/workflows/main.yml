@@ -10,22 +10,21 @@ jobs:
     steps:
     - name: Install Ngrok via Chocolatey
       run: |
-        # تثبيت الـ ngrok رسميًا وبأحدث نسخة بدون روابط مباشرة
         choco install ngrok -y
     - name: Authenticate Ngrok
       run: |
-        # ربط التوكين الخاص بك لفتح النفق
         ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
     - name: Enable RDP and Set Password
       run: |
-        # تفعيل خاصية سطح المكتب البعيد وإعداد الحساب
+        # تفعيل الـ RDP في الريجستري وجدار الحماية
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        net user administrator "RdpPassword2026!" /add
-        net localgroup administrators administrator /add
+        
+        # تغيير باسور الحساب الحالي لـ GitHub Runner نفسه لضمان الدخول المباشر
+        $Password = ConvertTo-SecureString "Pass2026!" -AsPlainText -Force
+        Set-LocalUser -Name "runneradmin" -Password $Password
     - name: Create Tunnel and Keep Alive
       run: |
-        # تشغيل النفق والإبقاء على السيرفر حيًا
-        Start-Process ngrok -ArgumentList "tcp 3389"
-        echo "RDP is ready! Check your Ngrok Endpoints."
+        Start-Process ngrok -ArgumentList "tcp --region us 3389"
+        echo "RDP is ready!"
         Start-Sleep -Seconds 21600
