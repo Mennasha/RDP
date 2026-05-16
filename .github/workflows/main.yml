@@ -1,4 +1,4 @@
-name: Windows-RDP-LocalTunnel
+name: Windows-RDP-Google
 
 on: workflow_dispatch
 
@@ -8,20 +8,19 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Enable RDP and Set Password
+    - name: Download and Install Chrome Remote Desktop
       run: |
-        # تفعيل الـ RDP وتغيير الباسورد
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        $Password = ConvertTo-SecureString "Pass2026!" -AsPlainText -Force
-        Set-LocalUser -Name "runneradmin" -Password $Password
+        # تحميل وتثبيت أداة جوجل الرسمية على السيرفر
+        Invoke-WebRequest -Uri "https://dl.google.com/compiled/chromeremotedesktophost.msi" -OutFile "crd.msi"
+        Start-Process msiexec.exe -ArgumentList "/i crd.msi /qn" -Wait
 
-    - name: Install Node and LocalTunnel
+    - name: Configure and Start Host
+      shell: cmd
       run: |
-        # تثبيت أداة لوكال تانل عبر npm المدمج في السيرفر
-        npm install -g localtunnel
+        # تشغيل الكود الخاص بك وتعيين الـ PIN الافتراضي (123456) لفتح الجهاز
+        "%PROGRAMFILES(X86)%\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AeoWuM_78tC2JCkXF5_wcJX5J96U3zmggEupvBeYxrSrpPALvKyJYWEkpq01vzr4rWuMOQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=%COMPUTERNAME% --pin=123456
 
-    - name: Start Tunnel
+    - name: Keep Alive
       run: |
-        # فتح النفق وتثبيته على منفذ الـ RDP الافتراضي 3389
-        lt --port 3389
+        # الإبقاء على السيرفر حيًا لمدة 6 ساعات
+        Start-Sleep -Seconds 21600
