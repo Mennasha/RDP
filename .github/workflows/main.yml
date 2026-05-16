@@ -1,4 +1,4 @@
-name: Windows-RDP-Tmate
+name: Windows-RDP-Pinggy
 
 on: workflow_dispatch
 
@@ -10,14 +10,15 @@ jobs:
     steps:
     - name: Enable RDP and Set Password
       run: |
-        # تفعيل الـ RDP وتغيير الباسورد
+        # تفعيل الـ RDP في الريجستري وجدار الحماية
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        
+        # تعيين باسور الحساب الحالي لـ GitHub Runner
         $Password = ConvertTo-SecureString "Pass2026!" -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
 
-    - name: Install and Run Tmate
+    - name: Start RDP Tunnel via Pinggy
       run: |
-        # تحميل أداة tmate وتشغيل النفق تلقائيًا بدون حسابات
-        choco install tmate -y
-        tmate -F
+        # فتح نفق اتصال مباشر لـ RDP بدون حسابات أو برامج خارجية
+        ssh -o StrictHostKeyChecking=no -p 443 -R0:localhost:3389 rdp@tcp.pinggy.io
