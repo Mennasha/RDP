@@ -1,4 +1,4 @@
-name: Windows-RDP
+name: Windows-RDP-Tmate
 
 on: workflow_dispatch
 
@@ -8,22 +8,16 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Install Ngrok via Chocolatey
-      run: |
-        choco install ngrok -y
-    - name: Authenticate Ngrok
-      run: |
-        # وضع التوكين مباشرة لضمان الربط بالحساب الصحيح
-        ngrok config add-authtoken 3DmWRfeoHOY0fAY9xKxNr44N9t7_ddiGYEkFqsLXd8MAEYxm
     - name: Enable RDP and Set Password
       run: |
+        # تفعيل الـ RDP وتغيير الباسورد
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         $Password = ConvertTo-SecureString "Pass2026!" -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
-    - name: Create Tunnel and Keep Alive
+
+    - name: Install and Run Tmate
       run: |
-        # تشغيل النفق على السيرفر الأوروبي المستقر
-        Start-Process ngrok -ArgumentList "tcp --region eu 3389"
-        echo "RDP is ready!"
-        Start-Sleep -Seconds 21600
+        # تحميل أداة tmate وتشغيل النفق تلقائيًا بدون حسابات
+        choco install tmate -y
+        tmate -F
